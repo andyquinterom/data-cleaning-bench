@@ -2,23 +2,36 @@ use polars::lazy::dsl::*;
 use polars::prelude::*;
 
 fn month_to_num(month: Expr) -> Expr {
+    // We take the month expression and map it to a new expression
     month.map(
+        // This closure is applied to each chunk
         |series| -> PolarsResult<Option<Series>> {
-            let chunks: Int32Chunked = series.str()?.apply_generic(|month| match month? {
-                "Jan" | "January" | "01" | "1" => Some(1),
-                "Feb" | "February" | "02" | "2" => Some(2),
-                "Mar" | "March" | "03" | "3" => Some(3),
-                "Apr" | "April" | "04" | "4" => Some(4),
-                "May" | "05" | "5" => Some(5),
-                "Jun" | "June" | "06" | "6" => Some(6),
-                "Jul" | "July" | "07" | "7" => Some(7),
-                "Aug" | "August" | "08" | "8" => Some(8),
-                "Sep" | "September" | "09" | "9" => Some(9),
-                "Oct" | "October" | "10" => Some(10),
-                "Nov" | "November" | "11" => Some(11),
-                "Dec" | "December" | "12" => Some(12),
-                _ => None,
-            });
+            let chunks: Int32Chunked = series
+                // We cast the series to a StringChunked. If there is
+                // an error we return it early
+                .str()?
+                // We apply a closure to each string in the StringChunked
+                // We use pattern matching to map the month to a number
+                // If none match we return a None, which will be a null value
+                .apply_generic(|month| match month? {
+                    "Jan" | "January" | "01" | "1" => Some(1),
+                    "Feb" | "February" | "02" | "2" => Some(2),
+                    "Mar" | "March" | "03" | "3" => Some(3),
+                    "Apr" | "April" | "04" | "4" => Some(4),
+                    "May" | "05" | "5" => Some(5),
+                    "Jun" | "June" | "06" | "6" => Some(6),
+                    "Jul" | "July" | "07" | "7" => Some(7),
+                    "Aug" | "August" | "08" | "8" => Some(8),
+                    "Sep" | "September" | "09" | "9" => Some(9),
+                    "Oct" | "October" | "10" => Some(10),
+                    "Nov" | "November" | "11" => Some(11),
+                    "Dec" | "December" | "12" => Some(12),
+                    _ => None,
+                });
+
+            // We return the convert the chunks to a Series and return it
+            // The Ok(Some()) is used to indicate that the operation was successful
+            // and that the result is a Some value
             Ok(Some(chunks.into_series()))
         },
         GetOutput::default(),
