@@ -44,10 +44,7 @@ fn month_to_num(month: Expr) -> Expr {
 fn substr(expr: Expr, start: usize, end: usize) -> Expr {
     expr.map(
         move |s: Series| -> PolarsResult<Option<Series>> {
-            let chunks: StringChunked = s.str()?.apply_generic(|s| match s {
-                None => None,
-                Some(s) => s.get(start..end),
-            });
+            let chunks: StringChunked = s.str()?.apply_generic(|s| s?.get(start..end));
             Ok(Some(chunks.into_series()))
         },
         GetOutput::default(),
