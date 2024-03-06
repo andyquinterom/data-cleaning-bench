@@ -2,17 +2,19 @@ use polars::lazy::dsl::*;
 use polars::prelude::*;
 
 fn month_to_num(month: Expr) -> Expr {
-    // We take the month expression and map it to a new expression
+    // Utilizamos la expresión de `month` y le aplicamos un mapeo
     month.map(
-        // This closure is applied to each chunk
+        // Esta función se aplica a cada pedazo de la serie
         |series| -> PolarsResult<Option<Series>> {
             let chunks: Int32Chunked = series
-                // We cast the series to a StringChunked. If there is
-                // an error we return it early
+                // Convertimos la serie a una StringChunked
+                // la cual contiene strings. Si ocurre un error
+                // durante la lectura, retornamos el error con el signo `?`
                 .str()?
-                // We apply a closure to each string in the StringChunked
-                // We use pattern matching to map the month to a number
-                // If none match we return a None, which will be a null value
+                // Aplicamos a cada elemento del chunk una función
+                // que convierte el mes a un número
+                // Si el mes no es válido, retornamos None
+                // el cual es un valor nulo en Polars
                 .apply_generic(|month| match month? {
                     "Jan" | "January" | "01" | "1" => Some(1),
                     "Feb" | "February" | "02" | "2" => Some(2),
@@ -29,9 +31,10 @@ fn month_to_num(month: Expr) -> Expr {
                     _ => None,
                 });
 
-            // We return the convert the chunks to a Series and return it
-            // The Ok(Some()) is used to indicate that the operation was successful
-            // and that the result is a Some value
+            // Retornamos el resultado en forma de una nueva
+            // serie que contiene los números de los meses.
+            // El Ok(Some(...)) indica que la operación fue exitosa
+            // y que el resultado es un valor Some(...)
             Ok(Some(chunks.into_series()))
         },
         GetOutput::default(),
