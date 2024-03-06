@@ -2,10 +2,9 @@ use polars::lazy::dsl::*;
 use polars::prelude::*;
 
 fn month_to_num(month: Expr) -> Expr {
-    fn opt_month_to_opt_int(month: Option<&str>) -> Option<i32> {
-        match month {
-            None => None,
-            Some(s) => match s {
+    month.map(
+        |series| -> PolarsResult<Option<Series>> {
+            let chunks: Int32Chunked = series.str()?.apply_generic(|month| match month? {
                 "Jan" | "January" | "01" | "1" => Some(1),
                 "Feb" | "February" | "02" | "2" => Some(2),
                 "Mar" | "March" | "03" | "3" => Some(3),
@@ -19,12 +18,7 @@ fn month_to_num(month: Expr) -> Expr {
                 "Nov" | "November" | "11" => Some(11),
                 "Dec" | "December" | "12" => Some(12),
                 _ => None,
-            },
-        }
-    }
-    month.map(
-        |s: Series| -> PolarsResult<Option<Series>> {
-            let chunks: Int32Chunked = s.str()?.apply_generic(opt_month_to_opt_int);
+            });
             Ok(Some(chunks.into_series()))
         },
         GetOutput::default(),
