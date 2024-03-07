@@ -1,5 +1,5 @@
-n_sensors <- 1
-n_iterations <- 1
+n_sensors <- 30
+n_iterations <- 10
 
 prelude <- function() {
   # Create Data Directory
@@ -8,7 +8,7 @@ prelude <- function() {
   }
 
   # Install R Packages
-  required_packages <- c("dplyr", "purrr", "readr", "tidyr", "tibble", "microbenchmark")
+  required_packages <- c("dplyr", "purrr", "readr", "tidyr", "tibble", "microbenchmark", "data.table")
   new_packages <- required_packages |>
     setdiff(installed.packages()[, "Package"])
 
@@ -31,7 +31,7 @@ prelude <- function() {
     args = c("fake_airquality.R", as.character(n_sensors)),
     stderr = NULL,
     stdin = "",
-    stdout = NULL
+    stdout = ""
   )
 }
 
@@ -46,6 +46,13 @@ r_tidyverse <- function() {
   system2("Rscript", "r_tidyverse/r_tidyverse.R", stderr = NULL, stdin = "", stdout = NULL)
 }
 
+r_datatable <- function() {
+  if (file.exists("data/air_quality_r_datatable.csv")) {
+    file.remove("data/air_quality_r_datatable.csv")
+  }
+  system2("Rscript", "r_datatable/r_datatable.R", stderr = NULL, stdin = "", stdout = NULL)
+}
+
 rust_polars <- function() {
   if (file.exists("data/air_quality_rust.csv")) {
     file.remove("data/air_quality_rust.csv")
@@ -56,6 +63,7 @@ rust_polars <- function() {
 results <- microbenchmark(
   r_tidyverse(),
   rust_polars(),
+  r_datatable(),
   unit = "seconds",
   times = n_iterations
 )

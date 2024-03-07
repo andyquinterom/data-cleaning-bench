@@ -55,6 +55,7 @@ const AIR_QUALITY_CSV: &str = "data/air_quality.csv";
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let mut schema = Schema::new();
+
     schema.with_column("month".into(), DataType::String);
     schema.with_column("day".into(), DataType::Int32);
     schema.with_column("year".into(), DataType::Int32);
@@ -66,7 +67,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     schema.with_column("temp".into(), DataType::Int32);
     schema.with_column("sensor_id".into(), DataType::String);
 
-    let null_values = NullValues::AllColumns(vec!["NA".to_string(), "N/A".to_string()]);
+    let null_values = NullValues::AllColumns(vec!["NA".to_string()]);
 
     let df = LazyCsvReader::new(AIR_QUALITY_CSV)
         .has_header(true)
@@ -125,10 +126,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let mut res = df.collect()?;
 
-    CsvWriter::new(std::io::BufWriter::new(std::fs::File::create(
-        "data/air_quality_rust.csv",
-    )?))
-    .finish(&mut res)?;
+    CsvWriter::new(std::fs::File::create("data/air_quality_rust.csv")?).finish(&mut res)?;
 
     Ok(())
 }
